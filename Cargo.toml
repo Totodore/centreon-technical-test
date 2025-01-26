@@ -1,0 +1,3 @@
+[workspace]
+members = ["file-processor", "file-processor-cli"]
+resolver = "2"
