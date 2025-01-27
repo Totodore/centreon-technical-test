@@ -1,20 +1,18 @@
-use file_processor::count_line_words_concurrent;
-use futures_util::{stream, StreamExt};
-use tokio::{fs::File, io::BufReader};
+use file_processor::FileProcessorStreamExt;
 
 #[tokio::main]
-async fn main() {
-    env_logger::init();
-    let files = std::env::args().skip(1).collect::<Vec<_>>();
-    let stream = stream::iter(files.iter()).filter_map(open_file);
-    let result = count_line_words_concurrent(stream).await;
-    dbg!(result);
-}
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::builder()
+        .filter_level(log::LevelFilter::Info)
+        .parse_default_env()
+        .init();
 
-async fn open_file(path: &String) -> Option<(&str, BufReader<File>)> {
-    let file = File::open(&path)
-        .await
-        .inspect_err(|e| log::warn!("Could not open {path}, {e}, skipping it."))
-        .ok()?;
-    Some((path, BufReader::new(file)))
+    let files = std::env::args().skip(1).collect::<Vec<_>>();
+    let result = files
+        .iter()
+        .map(String::as_str)
+        .count_line_words_concurrent()
+        .await;
+    serde_json::to_writer_pretty(std::io::stdout(), &result)?;
+    Ok(())
 }
