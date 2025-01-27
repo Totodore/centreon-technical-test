@@ -139,25 +139,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "file-processor"
-version = "0.1.0"
-dependencies = [
- "futures-util",
- "log",
- "pin-project-lite",
- "tokio",
- "tokio-stream",
-]
-
-[[package]]
 name = "file-processor-cli"
 version = "0.1.0"
 dependencies = [
  "env_logger",
- "file-processor",
  "futures-util",
  "log",
  "serde_json",
+ "string-stream-processor",
  "tokio",
 ]
 
@@ -374,6 +363,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f92a496fb766b417c996b9c5e57daf2f7ad3b0bebe1ccfca4856390e3d3bb67"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "string-stream-processor"
+version = "0.1.0"
+dependencies = [
+ "futures-util",
+ "log",
+ "pin-project-lite",
+ "tokio",
+ "tokio-stream",
 ]
 
 [[package]]

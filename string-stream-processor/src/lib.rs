@@ -6,9 +6,8 @@ use tokio_stream::wrappers::LinesStream;
 
 /// Extension trait for stream over async readers bound to a string identifier.
 ///
-/// This is a convenience method to count the number of words in each line of each data stream concurrently.
-/// For more control, use the `count_line_words_concurrent` function directly.
-pub trait FileProcessorStreamExt<'a, R>: Stream<Item = (&'a str, R)> + Sized
+/// In practice, this can be a stream of file paths and associated readers or net identifiers and associated readers.
+pub trait StringMultiStreamExt<'a, R>: Stream<Item = (&'a str, R)> + Sized
 where
     R: AsyncBufRead + Unpin,
 {
@@ -20,24 +19,24 @@ where
         count_line_words_concurrent(self)
     }
 }
-impl<'a, R, S> FileProcessorStreamExt<'a, R> for S
+
+impl<'a, R, S> StringMultiStreamExt<'a, R> for S
 where
     R: AsyncBufRead + Unpin,
     S: Stream<Item = (&'a str, R)>,
 {
 }
 
-/// Count the number of words from a stream of async readers and associated paths.
-/// Returns a map of paths to a vector of word counts for each line.
+/// Count the number of words from a stream of async readers and associated identifiers.
 ///
-/// The files will be read concurrently.
-pub async fn count_line_words_concurrent<'a, R: AsyncBufRead + Unpin>(
+/// Returns a map of identifiers to a vector of word counts for each line.
+async fn count_line_words_concurrent<'a, R: AsyncBufRead + Unpin>(
     rds: impl Stream<Item = (&'a str, R)>,
 ) -> HashMap<&'a str, Vec<usize>> {
     let mut data: HashMap<&'a str, Vec<usize>> = HashMap::new();
     rds.flat_map_unordered(None, count_line_words)
-        .fold(&mut data, |acc, (path, count)| {
-            acc.entry(path).or_default().push(count);
+        .fold(&mut data, |acc, (id, count)| {
+            acc.entry(id).or_default().push(count);
             async move { acc }
         })
         .await;
@@ -46,11 +45,12 @@ pub async fn count_line_words_concurrent<'a, R: AsyncBufRead + Unpin>(
 }
 
 /// Returns a stream of the number of words for each line of the input.
-/// The input path will be included in the output.
-fn count_line_words<R: AsyncBufRead>((path, rd): (&str, R)) -> impl Stream<Item = (&str, usize)> {
+///
+/// The input identifier will be included in the output.
+fn count_line_words<R: AsyncBufRead>((id, rd): (&str, R)) -> impl Stream<Item = (&str, usize)> {
     LinesStream::new(rd.lines())
         .map(|line| line.unwrap().split_whitespace().count())
-        .map(move |itm| (path, itm))
+        .map(move |itm| (id, itm))
 }
 
 #[cfg(test)]

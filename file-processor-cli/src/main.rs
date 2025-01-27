@@ -1,5 +1,5 @@
-use file_processor::FileProcessorStreamExt;
 use futures_util::{stream, StreamExt};
+use string_stream_processor::StringMultiStreamExt;
 use tokio::{fs::File, io::BufReader};
 
 #[tokio::main]
